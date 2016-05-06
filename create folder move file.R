@@ -8,13 +8,10 @@ library(dplyr)
 library(tidyr)
 
 ### Directories
-topdir <- "Z:\\DEC\\Marine\\Working\\Kimberley\\Beaches\\Flight_Photos"
-photodir <- paste0(topdir, "\\Turtles\\Summer Aerial Surveys\\2013_2014\\",
-                   "ORIGINAL_PHOTOS\\Day_8_20140107")
-photodir <- paste0(topdir, "\\Turtles\\Summer Aerial Surveys\\2013_2014\\",
-                   "ORIGINAL_PHOTOS")
-mosdir <- paste0(topdir, "\\Turtles\\Summer Aerial Surveys\\2013_2014\\",
-                 "PHOTO_MOSAICS")
+topdir <- paste0("Z:\\DEC\\Marine\\Working\\Kimberley\\Beaches\\Flight_Photos\\",
+                 "Turtles\\Summer_Aerial_Surveys\\2013_2014")
+photodir <- paste0(topdir, "\\ORIGINAL_PHOTOS")
+mosdir <- paste0(topdir, "\\PHOTO_MOSAICS")
 
 ### Get Info From Shape File
 setwd(topdir)
@@ -46,9 +43,10 @@ list.dirs <- function(path=".", pattern=NULL, all.dirs=FALSE,
 oFolds <- list.dirs(photodir)
 
 for(i in 1:length(oFolds)){
-  photos <- list.files(paste(photodir, oFolds[i], sep = "\\"))
+  opath <- paste(photodir, oFolds[i], sep = "\\")
+  photos <- list.files(opath)
   ## Subset Data Frame to Match Existing Photos
-  wkdf <- shpdf[photos %in% shpdf$IMAGE, ]
+  wkdf <- shpdf[shpdf$IMAGE %in% photos, ]
   wkdf <- wkdf%>%
     arrange(IMAGE)
   ## Create Mosaic Folders
@@ -59,7 +57,7 @@ for(i in 1:length(oFolds)){
   }
   ## Copy Photos to Mosaic Folders
   for(k in 1:length(wkdf$IMAGE)){
-    from.k <- paste(photodir, wkdf$IMAGE[k], sep = "\\")
+    from.k <- paste(opath, wkdf$IMAGE[k], sep = "\\")
     to.k <- paste(mosdir, wkdf$MOSFOLD[k], wkdf$IMAGE[k], sep = "\\")
     file.copy(from=from.k, to=to.k, recursive = FALSE, overwrite = TRUE, 
               copy.mode = TRUE)
@@ -67,35 +65,12 @@ for(i in 1:length(oFolds)){
 }
 
 
-
-
-
-
-
-
-#
-photos <- list.files(photodir)
-wkdf <- shpdf[photos %in% shpdf$IMAGE, ]
-wkdf <- wkdf%>%
-  arrange(IMAGE)
-
-#
-setwd(mosdir)
-foldnames <- unique(wkdf$MOSFOLD)
-for(j in 1:length(foldnames)){
-  if(!file.exists(foldnames[j])){dir.create(foldnames[j])}
+## WATCH OUT!! Deleting Photos used to make Mosaic
+mFolds <- list.dirs(mosdir)
+for(i in 1:length(mFolds)){
+  path.i <- paste(mosdir, mFolds[i], sep = "\\")
+  to_delete <- paste(path.i, list.files(path = path.i, pattern = "DSC"), 
+                     sep = "\\")
+  file.remove(to_delete)
 }
-
-##
-for(k in 1:length(wkdf$IMAGE)){
-  from.k <- paste(photodir, wkdf$IMAGE[k], sep = "\\")
-  to.k <- paste(mosdir, wkdf$MOSFOLD[k], wkdf$IMAGE[k], sep = "\\")
-  file.copy(from=from.k, to=to.k, recursive = FALSE, overwrite = TRUE, 
-            copy.mode = TRUE)
-}
-
-### WATCH OUT!! Deleting Original Photos
-# files_to_delete <- paste(photodir, list.files(photodir), sep = "\\")
-# file.remove(files_to_delete)
-
 
